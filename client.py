@@ -20,7 +20,14 @@ def uploader(filename):
     except FileNotFoundError:
         print("Error: " + filename + " not found.")
 
-# def downloader():
+def downloader(filename):
+    url = "http://localhost:2586/uploads/" + filename
+    res = requests.get(url)
+    with open(filename,'wb') as fileToWrite:
+        fileToWrite.write(res.content)
+    print("Downloaded and wrote to file: " + filename)
+    # print(res.content)
+
 
 def listDirectories():
     print("Asking for list of dirs")

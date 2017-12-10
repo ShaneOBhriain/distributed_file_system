@@ -48,7 +48,8 @@ def updateDirectoryService():
 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
-    return send_from_directory(app.config[UPLOAD_FOLDER],filename)
+    print("Trying to get filename: " + filename)
+    return send_from_directory(UPLOAD_FOLDER,filename)
 
 @app.route('/upload', methods=['GET', 'POST'])
 def upload_file():
