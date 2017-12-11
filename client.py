@@ -12,7 +12,7 @@ def uploader(filename):
     try:
         with open(filename,'rb') as fileToSend:
             files = {'file':fileToSend}
-            msg = requests.post("http://localhost:2586/upload",files=files)
+            msg = requests.post("http://localhost:9001/replicate",files=files)
             if msg.status_code == 200:
                 print("Successfully uploaded file")
             else:
@@ -21,7 +21,7 @@ def uploader(filename):
         print("Error: " + filename + " not found.")
 
 def downloader(filename):
-    url = "http://localhost:2586/uploads/" + filename
+    url = "http://localhost:8001/uploads/" + filename
     res = requests.get(url)
     with open(filename,'wb') as fileToWrite:
         fileToWrite.write(res.content)
@@ -29,7 +29,7 @@ def downloader(filename):
 
 def deleteFile(filename):
     msg = {"key": filename}
-    res = requests.post("http://localhost:2586/delete", data = msg)
+    res = requests.post("http://localhost:8001/delete", data = msg)
     print(res.text)
 
 
