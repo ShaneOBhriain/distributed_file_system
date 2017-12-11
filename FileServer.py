@@ -16,19 +16,32 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+
 def list_files(startpath):
     result = ""
+    edit_times = {}
     for root, dirs, files in os.walk(startpath):
         level = root.replace(startpath, '').count(os.sep)
         indent = ' ' * 4 * (level)
         result = addLine(result,'{}{}/'.format(indent, os.path.basename(root)))
         subindent = ' ' * 4 * (level + 1)
         for f in files:
+            print(f)
             result = addLine(result,'{}{}'.format(subindent, f))
     return result
 
 def addLine(fullStr, lineToAdd):
     return (fullStr + "\n" + lineToAdd)
+
+@app.route("/get_last_edit_time", methods=["GET"])
+def get_last_edit_time():
+    print("About to check last edit time for ")
+    data = request.form
+    filename = data["filename"]
+    print("LAST EDIT TIME :" + UPLOAD_FOLDER+"/" + filename)
+    time = os.path.getmtime(UPLOAD_FOLDER+"/"+filename)
+    print(time)
+    return str(time)
 
 @app.route('/update_dir_service', methods=['GET'])
 def updateDirService():
@@ -68,8 +81,6 @@ def upload_file():
         if 'file' not in request.files:
             return "No file attached to request"
         myfile = request.files['file']
-        print("MY FILE #################")
-        print(myfile)
         # if user does not select file, browser also
         # submit a empty part without filename
         if myfile.filename == '':
@@ -80,7 +91,6 @@ def upload_file():
             save_location= current_path + "/" + (app.config["UPLOAD_FOLDER"] + "-" + sys.argv[1]) + "/" + filename
             print("Saving " + filename + " to " + save_location)
             myfile.save(save_location)
-            dir_url = config.directory_service_url +"/replicate"
         else:
             print("Error somewhere")
 

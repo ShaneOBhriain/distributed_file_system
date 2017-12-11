@@ -1,5 +1,7 @@
 import os
 import config
+import time
+
 directory = ""
 
 from flask import Flask, request, jsonify, redirect, url_for, flash
@@ -11,21 +13,36 @@ app = Flask(__name__)
 
 directories = ""
 
-server_has_file = {}
+last_edit_time = {}
 
 def initialize_server_info():
     for server_port in config.file_server_ports:
-        server_has_file[server_port] = []
+        last_edit_time[server_port] = []
     print("Initialized server info.")
 
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+@app.route("/get_last_edit_time", methods=["GET"])
+def get_last_edit_time():
+    print("About to check last edit time for ")
+    data = request.form
+    filename = data["filename"]
+    print(filename)
+    msg = {"filename": filename}
+    req = requests.get("http://localhost:" + str(config.file_server_ports[0]) + "/get_last_edit_time",data=msg)
+    print("LAST EDIT TIME: " + req.text)
+    return req.text
+
+
 @app.route("/replicate", methods=["POST"])
 def replicate():
     myfile = request.files['file']
     filename = myfile.filename
+
+    last_edit_time[filename] = time.time()
+
     current_path = os.getcwd()
     save_location= current_path + "/tmp/" + filename
     print("Saving " + filename + " to " + save_location)

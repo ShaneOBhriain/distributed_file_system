@@ -1,11 +1,14 @@
 import sys
 import requests
+import time
+import config
+import os
 
-
+last_download_time = {}
 
 def printOptions():
-    instructions = "Choose an option from the following by typing the corresponding number and the arguments after it.\nFor example, to upload 'foo.png' you would type '2 foo.png'\n"
-    options = "--------------------\n1. Specify local directory for files you are uploading.\n2. Upload file.\n3. Download file.\n4. Delete File \n5.List directories.\n--------------------\n"
+    instructions = "\n\nChoose an option'\n"
+    options = "--------------------\n1. Specify local directory for files you are uploading.\n2. Upload file. (upload 'filename')\n3. Download file. (download 'filename')\n4. Delete File (del 'filename') \n5. List directories. (ls)\n--------------------\n"
     print(instructions + options)
 
 def uploader(filename):
@@ -21,11 +24,25 @@ def uploader(filename):
         print("Error: " + filename + " not found.")
 
 def downloader(filename):
-    url = "http://localhost:8001/uploads/" + filename
-    res = requests.get(url)
-    with open(filename,'wb') as fileToWrite:
-        fileToWrite.write(res.content)
-    print("Downloaded and wrote to file: " + filename)
+    print("Checking last edit time")
+
+    should_download = True
+
+    req = {"filename": filename}
+    last_edit_time = requests.get("http://localhost:9001/get_last_edit_time", data=req)
+    result_file = config.DOWNLOAD_FOLDER+"/"+filename
+    if filename in os.listdir(config.DOWNLOAD_FOLDER):
+        local_last_edit = os.path.getmtime(result_file)
+        if(local_last_edit > float(last_edit_time.text)):
+            print("Using cached file")
+            should_download = False
+    if should_download:
+        url = "http://localhost:8001/uploads/" + filename
+        res = requests.get(url)
+        last_download_time[filename] = time.time()
+        with open(result_file,'wb') as fileToWrite:
+            fileToWrite.write(res.content)
+        print("Downloaded and wrote to file: " + result_file)
 
 def deleteFile(filename):
     msg = {"key": filename}
@@ -35,7 +52,7 @@ def deleteFile(filename):
 
 def listDirectories():
     print("Asking for list of dirs")
-    msg = requests.get("http://localhost:3473/get_directories")
+    msg = requests.get("http://localhost:9001/get_directories")
     print("msg")
     print(msg.text)
 
