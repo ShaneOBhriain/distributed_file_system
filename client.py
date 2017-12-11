@@ -5,7 +5,7 @@ import requests
 
 def printOptions():
     instructions = "Choose an option from the following by typing the corresponding number and the arguments after it.\nFor example, to upload 'foo.png' you would type '2 foo.png'\n"
-    options = "--------------------\n1. Specify local directory for files you are uploading.\n2. Upload file.\n3. Download file.\n4. List directories.\n--------------------\n"
+    options = "--------------------\n1. Specify local directory for files you are uploading.\n2. Upload file.\n3. Download file.\n4. Delete File \n5.List directories.\n--------------------\n"
     print(instructions + options)
 
 def uploader(filename):
@@ -26,7 +26,11 @@ def downloader(filename):
     with open(filename,'wb') as fileToWrite:
         fileToWrite.write(res.content)
     print("Downloaded and wrote to file: " + filename)
-    # print(res.content)
+
+def deleteFile(filename):
+    msg = {"key": filename}
+    res = requests.post("http://localhost:2586/delete", data = msg)
+    print(res.text)
 
 
 def listDirectories():
@@ -38,15 +42,16 @@ def listDirectories():
 def main():
     printOptions()
     cmd = input("Enter your command: ")
-    print(cmd.split())
     cmdList = cmd.split()
     if cmdList[0]!="ls" and len(cmdList) !=2:
         print("Incorrect number of arguments")
     if cmdList[0] == "upload":
         uploader(cmdList[1])
-    if cmdList[0] == "download":
+    elif cmdList[0] == "download":
         downloader(cmdList[1])
-    if cmdList[0] == "ls":
+    elif cmdList[0] == "ls":
         listDirectories()
+    elif cmdList[0] == "del":
+        deleteFile(cmdList[1])
     main()
 main()

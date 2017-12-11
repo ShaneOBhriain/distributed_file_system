@@ -45,6 +45,15 @@ def updateDirectoryService():
     requests.post("http://localhost:3473/update_directories", data = msg)
     print("Done")
 
+@app.route('/delete', methods=["POST"])
+def delete_file():
+    print ("About to delete: " + request.form["key"])
+    try:
+        os.remove(UPLOAD_FOLDER+"/"+request.form["key"])
+        return "Successfully deleted file"
+    except FileNotFoundError:
+        print("Error - No such file : " + request.form["key"])
+        return "Error, no such file."
 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
