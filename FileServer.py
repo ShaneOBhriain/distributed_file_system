@@ -10,6 +10,8 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.secret_key = 'secret_key'
 app.config['SESSION_TYPE'] = 'filesystem'
 
+server_upload_folder = app.config["UPLOAD_FOLDER"] + "-" + sys.argv[1]
+
 ALLOWED_EXTENSIONS = set(['txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
 
 def allowed_file(filename):
@@ -41,11 +43,11 @@ def get_last_edit_time():
 
 @app.route('/get_directory_list', methods=['GET'])
 def updateDirService():
-    dirs = list_files(UPLOAD_FOLDER)
+    dirs = list_files(server_upload_folder)
     return dirs;
 
 def updateDirectoryService():
-    dirs = list_files(UPLOAD_FOLDER)
+    dirs = list_files(server_upload_folder)
     print(type(dirs))
     msg = {"key": dirs}
     print(msg)
@@ -57,7 +59,7 @@ def updateDirectoryService():
 @app.route('/delete', methods=["POST"])
 def delete_file():
     try:
-        os.remove(UPLOAD_FOLDER+"/"+request.form["key"])
+        os.remove(server_upload_folder+"/"+request.form["filename"])
         return "Successfully deleted file"
     except FileNotFoundError:
         print("Error - No such file : " + request.form["key"])
@@ -67,7 +69,7 @@ def delete_file():
 def uploaded_file(filename):
     print("Trying to get filename: " + filename)
     try:
-        return send_from_directory(UPLOAD_FOLDER,filename)
+        return send_from_directory(server_upload_folder,filename)
     except FileNotFoundError:
         return "Error: File not found on servers."
 @app.route('/upload', methods=['GET', 'POST'])
@@ -84,7 +86,7 @@ def upload_file():
         if myfile and allowed_file(myfile.filename):
             filename = secure_filename(myfile.filename)
             current_path = os.getcwd()
-            save_location= current_path + "/" + (app.config["UPLOAD_FOLDER"] + "-" + sys.argv[1]) + "/" + filename
+            save_location= current_path + "/" + server_upload_folder + "/" + filename
             print("Saving " + filename + " to " + save_location)
             myfile.save(save_location)
         else:
@@ -98,4 +100,5 @@ if __name__ == '__main__':
         os.mkdir((app.config["UPLOAD_FOLDER"] + "-" + sys.argv[1]))
     except:
         print("Upload Dir exists")
+    print("Running file server on port " + str(sys.argv[1]))
     app.run(debug=True,host="localhost", port=int(sys.argv[1]))

@@ -8,7 +8,7 @@ last_download_time = {}
 
 def printOptions():
     instructions = "\n\nChoose an option'\n"
-    options = "--------------------\n1. Specify local directory for files you are uploading.\n2. Upload file. (upload 'filename')\n3. Download file. (download 'filename')\n4. Delete File (del 'filename') \n5. List directories. (ls)\n6. Lock Operations on File (lock/unlock/locked 'filename')\n--------------------\n"
+    options = "--------------------\n1. Specify download folder. (set_download_folder 'filename')\n2. Upload file. (upload 'filename')\n3. Download file. (download 'filename')\n4. Delete File (del 'filename') \n5. List directories. (ls)\n6. Lock Operations on File (lock/unlock/locked 'filename')\n--------------------\n"
     help_cmd = "\n\nTo see this menu again, simply use the 'help' command\n"
     print(instructions + options + help_cmd)
 
@@ -74,8 +74,8 @@ def downloader(filename):
             print("Downloaded and wrote to file: " + result_file)
 
 def deleteFile(filename):
-    msg = {"key": filename}
-    res = requests.post("http://localhost:8001/delete", data = msg)
+    msg = {"filename": filename}
+    res = requests.post(config.directory_service_url+"/delete", data = msg)
     print(res.text)
 
 def listDirectories():
@@ -97,12 +97,14 @@ def main(first_run):
     cmdList = cmd.split()
     if(cmdList[0]=="help"):
         printOptions()
+    elif cmdList[0] == "ls":
+        listDirectories()
+    elif len(cmdList) <2:
+        print("Invalid input")
     elif cmdList[0] == "upload":
         uploader(cmdList[1])
     elif cmdList[0] == "download":
         downloader(cmdList[1])
-    elif cmdList[0] == "ls":
-        listDirectories()
     elif cmdList[0] == "ls_available_uploads":
         listAvailableUploads()
     elif cmdList[0] == "del":

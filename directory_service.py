@@ -59,9 +59,18 @@ def replicate():
     updateDirectoryList()
     return "Replicated"
 
+@app.route("/delete",methods=["POST"])
+def distributeDeletes():
+    filename = request.form["filename"]
+    print("Deleting " + filename + " from all servers")
+    msg = {"filename": filename}
+    for server_port in config.file_server_ports:
+        server_url = "http://localhost:" + str(server_port) + "/delete"
+        msg = requests.post(server_url,data=msg)
+    return "Done"
 @app.route('/get_directories', methods=['GET'])
 def getDirectoryList():
-    print(directories)
+    updateDirectoryList()
     return directories
 
 if __name__ == '__main__':
@@ -71,4 +80,4 @@ if __name__ == '__main__':
         print("tmp folder exists.")
     initialize_server_info()
     updateDirectoryList()
-    app.run(debug=True,host="localhost", port=9001)
+    app.run(debug=True,host="localhost", port=config.directory_service_port)
