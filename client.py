@@ -8,8 +8,32 @@ last_download_time = {}
 
 def printOptions():
     instructions = "\n\nChoose an option'\n"
-    options = "--------------------\n1. Specify local directory for files you are uploading.\n2. Upload file. (upload 'filename')\n3. Download file. (download 'filename')\n4. Delete File (del 'filename') \n5. List directories. (ls)\n--------------------\n"
+    options = "--------------------\n1. Specify local directory for files you are uploading.\n2. Upload file. (upload 'filename')\n3. Download file. (download 'filename')\n4. Delete File (del 'filename') \n5. List directories. (ls)\n6. Lock Operations on File (lock/unlock/locked 'filename')\n--------------------\n"
     print(instructions + options)
+
+def lock_file(filename):
+    msg = {"filename":filename}
+    res = requests.post(config.lock_service_url+"/lock",data=msg)
+    if res.status_code == 200:
+        print(res.text)
+
+def unlockFile(filename):
+    msg = {"filename":filename}
+    res = requests.post(config.lock_service_url+"/unlock",data=msg)
+    if "Error" not in res.text:
+        print("Successfully unlocked " + filename)
+    else:
+        print(res.text)
+
+def getLockStatus(filename):
+    req={"filename":filename}
+    msg = requests.get(config.lock_service_url+"/lock_status",data=req)
+    if(bool(int(msg.text))):
+        print(filename + " Lock Status: Locked.")
+        return True
+    else:
+        print(filename + " Lock Status: Not Locked.")
+        return False
 
 def uploader(filename):
     try:
@@ -25,7 +49,9 @@ def uploader(filename):
 
 def downloader(filename):
     print("Checking last edit time")
-
+    if(getLockStatus(filename)):
+        print("Error: File is locked and can not be downloaded.")
+        return False
     should_download = True
 
     req = {"filename": filename}
@@ -56,6 +82,8 @@ def listDirectories():
     print("msg")
     print(msg.text)
 
+
+
 def main():
     printOptions()
     cmd = input("Enter your command: ")
@@ -70,5 +98,11 @@ def main():
         listDirectories()
     elif cmdList[0] == "del":
         deleteFile(cmdList[1])
+    elif cmdList[0] == "lock":
+        lock_file(cmdList[1])
+    elif cmdList[0] == "locked":
+        getLockStatus(cmdList[1])
+    elif cmdList[0] == "unlock":
+        unlockFile(cmdList[1])
     main()
 main()

@@ -40,9 +40,7 @@ def get_last_edit_time():
 def replicate():
     myfile = request.files['file']
     filename = myfile.filename
-
     last_edit_time[filename] = time.time()
-
     current_path = os.getcwd()
     save_location= current_path + "/tmp/" + filename
     print("Saving " + filename + " to " + save_location)
