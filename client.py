@@ -9,7 +9,8 @@ last_download_time = {}
 def printOptions():
     instructions = "\n\nChoose an option'\n"
     options = "--------------------\n1. Specify local directory for files you are uploading.\n2. Upload file. (upload 'filename')\n3. Download file. (download 'filename')\n4. Delete File (del 'filename') \n5. List directories. (ls)\n6. Lock Operations on File (lock/unlock/locked 'filename')\n--------------------\n"
-    print(instructions + options)
+    help_cmd = "\n\nTo see this menu again, simply use the 'help' command\n"
+    print(instructions + options + help_cmd)
 
 def lock_file(filename):
     msg = {"filename":filename}
@@ -48,7 +49,6 @@ def uploader(filename):
         print("Error: " + filename + " not found.")
 
 def downloader(filename):
-    print("Checking last edit time")
     if(getLockStatus(filename)):
         print("Error: File is locked and can not be downloaded.")
         return False
@@ -66,36 +66,45 @@ def downloader(filename):
         url = "http://localhost:8001/uploads/" + filename
         res = requests.get(url)
         last_download_time[filename] = time.time()
-        with open(result_file,'wb') as fileToWrite:
-            fileToWrite.write(res.content)
-        print("Downloaded and wrote to file: " + result_file)
+        if("404" in res.text):
+            print("Error: File not found on server.")
+        else:
+            with open(result_file,'wb') as fileToWrite:
+                fileToWrite.write(res.content)
+            print("Downloaded and wrote to file: " + result_file)
 
 def deleteFile(filename):
     msg = {"key": filename}
     res = requests.post("http://localhost:8001/delete", data = msg)
     print(res.text)
 
-
 def listDirectories():
-    print("Asking for list of dirs")
     msg = requests.get("http://localhost:9001/get_directories")
-    print("msg")
     print(msg.text)
 
+def setDownloadDir(dir_name):
+    try:
+        os.mkdir(dir_name)
+        config.DOWNLOAD_FOLDER = dir_name
+    except:
+        config.DOWNLOAD_FOLDER = dir_name
 
-
-def main():
-    printOptions()
-    cmd = input("Enter your command: ")
+def main(first_run):
+    if(first_run):
+        printOptions()
+        setDownloadDir(config.DOWNLOAD_FOLDER)
+    cmd = input(">: ")
     cmdList = cmd.split()
-    if cmdList[0]!="ls" and len(cmdList) !=2:
-        print("Incorrect number of arguments")
-    if cmdList[0] == "upload":
+    if(cmdList[0]=="help"):
+        printOptions()
+    elif cmdList[0] == "upload":
         uploader(cmdList[1])
     elif cmdList[0] == "download":
         downloader(cmdList[1])
     elif cmdList[0] == "ls":
         listDirectories()
+    elif cmdList[0] == "ls_available_uploads":
+        listAvailableUploads()
     elif cmdList[0] == "del":
         deleteFile(cmdList[1])
     elif cmdList[0] == "lock":
@@ -104,5 +113,9 @@ def main():
         getLockStatus(cmdList[1])
     elif cmdList[0] == "unlock":
         unlockFile(cmdList[1])
-    main()
-main()
+    elif cmdList[0] == "set_download_folder":
+        setDownloadDir(cmdList[1])
+    else:
+        print("Invalid input.")
+    main(False)
+main(True)

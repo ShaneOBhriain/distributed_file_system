@@ -25,7 +25,6 @@ def unlock():
         del(locked_files[file_index])
         return("Successfully unlocked file.")
     except ValueError:
-        print("Error: File is already unlocked or does not exist.")
         return("Error: File is already unlocked or does not exist.")
 
 

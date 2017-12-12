@@ -26,7 +26,6 @@ def list_files(startpath):
         result = addLine(result,'{}{}/'.format(indent, os.path.basename(root)))
         subindent = ' ' * 4 * (level + 1)
         for f in files:
-            print(f)
             result = addLine(result,'{}{}'.format(subindent, f))
     return result
 
@@ -35,19 +34,15 @@ def addLine(fullStr, lineToAdd):
 
 @app.route("/get_last_edit_time", methods=["GET"])
 def get_last_edit_time():
-    print("About to check last edit time for ")
     data = request.form
     filename = data["filename"]
-    print("LAST EDIT TIME :" + UPLOAD_FOLDER+"/" + filename)
     time = os.path.getmtime(UPLOAD_FOLDER+"/"+filename)
-    print(time)
     return str(time)
 
-@app.route('/update_dir_service', methods=['GET'])
+@app.route('/get_directory_list', methods=['GET'])
 def updateDirService():
-    print("Got update request")
-    updateDirectoryService()
-    return "Sending update to directory service."
+    dirs = list_files(UPLOAD_FOLDER)
+    return dirs;
 
 def updateDirectoryService():
     dirs = list_files(UPLOAD_FOLDER)
@@ -55,15 +50,14 @@ def updateDirectoryService():
     msg = {"key": dirs}
     print(msg)
     print("Sending update to directory service!")
-    requests.post("http://localhost:9001/update_directories", data = msg)
-    print("Done")
+    msg = requests.post("http://localhost:9001/update_directories", data = msg)
+    print(msg.text)
+    return("Done")
 
 @app.route('/delete', methods=["POST"])
 def delete_file():
-    print ("About to delete: " + request.form["key"])
     try:
         os.remove(UPLOAD_FOLDER+"/"+request.form["key"])
-        updateDirectoryService()
         return "Successfully deleted file"
     except FileNotFoundError:
         print("Error - No such file : " + request.form["key"])
@@ -72,8 +66,10 @@ def delete_file():
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
     print("Trying to get filename: " + filename)
-    return send_from_directory(UPLOAD_FOLDER,filename)
-
+    try:
+        return send_from_directory(UPLOAD_FOLDER,filename)
+    except FileNotFoundError:
+        return "Error: File not found on servers."
 @app.route('/upload', methods=['GET', 'POST'])
 def upload_file():
     if request.method == 'POST':
